@@ -9,12 +9,12 @@ use std::{
 };
 
 #[derive(Debug, Clone, Copy, PartialEq)]
-pub struct Coordinate {
+pub struct Coordinates {
     x: usize,
     y: usize,
 }
 
-impl Coordinate {
+impl Coordinates {
     pub fn new(x: usize, y: usize) -> Self {
         Self { x, y }
     }
@@ -69,10 +69,10 @@ pub enum Tile {
 impl Tile {
     pub fn color(&self) -> Color {
         match self {
-            Tile::Block => Color::RED,
-            Tile::Start => Color::GREEN,
-            Tile::Goal => Color::YELLOW,
-            Tile::Empty | Tile::Enemy => Color::WHITE,
+            Tile::Block => Color::rgb(0.71, 0.56, 0.68),
+            Tile::Start => Color::rgb(0.64, 0.75, 0.55),
+            Tile::Goal => Color::rgb(0.92, 0.8, 0.55),
+            Tile::Empty | Tile::Enemy => crate::BACKGROUND_COLOR,
         }
     }
 

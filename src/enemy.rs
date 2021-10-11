@@ -1,5 +1,5 @@
 use crate::{
-    map::{Coordinate, Map},
+    map::{Coordinates, Map},
     player::{Player, PlayerMovementEvent},
 };
 use bevy::prelude::*;
@@ -9,13 +9,13 @@ use std::cmp::Ordering;
 pub struct Enemy;
 
 impl Enemy {
-    pub const COLOR: Color = Color::PURPLE;
+    pub const COLOR: Color = Color::rgb(0.95, 0.38, 0.42);
 }
 
 pub fn enemy_movement(
     map: Res<Map>,
-    mut enemy_query: Query<(&mut Transform, &mut Coordinate), With<Enemy>>,
-    player_query: Query<&Coordinate, (With<Player>, Without<Enemy>)>,
+    mut enemy_query: Query<(&mut Transform, &mut Coordinates), With<Enemy>>,
+    player_query: Query<&Coordinates, (With<Player>, Without<Enemy>)>,
     mut events: EventReader<PlayerMovementEvent>,
 ) {
     if let Ok(player_coordinate) = player_query.single() {

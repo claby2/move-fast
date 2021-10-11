@@ -1,4 +1,4 @@
-use crate::map::{Coordinate, Map};
+use crate::map::{Coordinates, Map};
 use bevy::prelude::*;
 use std::cmp::Ordering;
 
@@ -9,17 +9,17 @@ pub struct PlayerMovementEvent;
 pub struct Player;
 
 impl Player {
-    pub const COLOR: Color = Color::rgb(0.3, 0.3, 0.3);
+    pub const COLOR: Color = Color::rgb(0.53, 0.75, 0.82);
 }
 
 pub fn player_movement(
     keyboard_input: Res<Input<KeyCode>>,
     map: Res<Map>,
-    mut player_query: Query<(&mut Transform, &mut Coordinate), With<Player>>,
+    mut player_query: Query<(&mut Transform, &mut Coordinates), With<Player>>,
     mut events: EventWriter<PlayerMovementEvent>,
 ) {
     if let Ok((mut player_transform, mut player_coordinate)) = player_query.single_mut() {
-        let initial_coordinate = player_coordinate.clone();
+        let initial_coordinate = *player_coordinate;
         for code in keyboard_input.get_just_pressed() {
             let (delta_x, delta_y) = crate::delta_from_code(*code);
             match delta_x.cmp(&0) {

@@ -2,15 +2,44 @@ mod enemy;
 mod map;
 mod player;
 mod respawn;
+mod ui;
 
 use bevy::{prelude::*, render::camera::Camera};
 use enemy::Enemy;
-use map::{Coordinate, Map, Tile};
+use map::{Coordinates, Map, Tile};
 use player::{Player, PlayerMovementEvent};
 use respawn::{RespawnEvent, RespawnPoint};
 use std::{env, error::Error, process};
+use ui::ButtonMaterials;
 
 pub const TILE_SIZE: f32 = 64.0;
+pub const BACKGROUND_COLOR: Color = Color::rgb(0.18, 0.2, 0.25);
+
+#[derive(Debug, Clone, Eq, PartialEq, Hash)]
+enum AppState {
+    Menu,
+    InGame,
+}
+
+fn update_app_state(
+    mut state: ResMut<State<AppState>>,
+    interaction_query: Query<&Interaction, (Changed<Interaction>, With<Button>)>,
+    mut keyboard_input: ResMut<Input<KeyCode>>,
+) {
+    match state.current() {
+        AppState::Menu => {
+            if matches!(interaction_query.single(), Ok(Interaction::Clicked)) {
+                state.set(AppState::InGame).unwrap();
+            }
+        }
+        AppState::InGame => {
+            if keyboard_input.pressed(KeyCode::Escape) {
+                state.set(AppState::Menu).unwrap();
+                keyboard_input.reset(KeyCode::Escape);
+            }
+        }
+    }
+}
 
 fn delta_from_code(code: KeyCode) -> (i8, i8) {
     let delta_x: i8 = match code {
@@ -26,13 +55,14 @@ fn delta_from_code(code: KeyCode) -> (i8, i8) {
     (delta_x, delta_y)
 }
 
-fn setup(mut commands: Commands, map: Res<Map>, mut materials: ResMut<Assets<ColorMaterial>>) {
+fn game_setup(mut commands: Commands, mut materials: ResMut<Assets<ColorMaterial>>, map: Res<Map>) {
+    commands.insert_resource(ClearColor(Color::GRAY));
     commands.spawn_bundle(OrthographicCameraBundle::new_2d());
 
     let half_size = (map.size / 2) as isize;
 
     let mut player_transform = Transform::default();
-    let mut player_coordinate = Coordinate::new(half_size as usize, half_size as usize);
+    let mut player_coordinate = Coordinates::new(half_size as usize, half_size as usize);
 
     let tile_size = Vec2::splat(TILE_SIZE);
 
@@ -42,7 +72,7 @@ fn setup(mut commands: Commands, map: Res<Map>, mut materials: ResMut<Assets<Col
                 (x as isize - half_size) as f32,
                 (half_size - y as isize) as f32,
             );
-            let coordinate = Coordinate::new(x, y);
+            let coordinate = Coordinates::new(x, y);
             let transform = Transform::from_translation((position * tile_size).extend(0.0));
             let tile = map[y][x];
             match tile {
@@ -106,6 +136,12 @@ fn camera_follow(
     }
 }
 
+fn cleanup(mut commands: Commands, query: Query<Entity>) {
+    for entity in query.iter() {
+        commands.entity(entity).despawn_recursive();
+    }
+}
+
 fn main() -> Result<(), Box<dyn Error>> {
     let args: Vec<_> = env::args().collect();
     if args.len() < 2 {
@@ -116,15 +152,29 @@ fn main() -> Result<(), Box<dyn Error>> {
         let map = Map::load(path)?;
         App::build()
             .add_plugins(DefaultPlugins)
+            .add_state(AppState::Menu)
             .add_event::<RespawnEvent>()
             .add_event::<PlayerMovementEvent>()
+            .init_resource::<ButtonMaterials>()
             .insert_resource(map)
-            .add_startup_system(setup.system())
-            .add_system(player::player_movement.system())
-            .add_system(enemy::enemy_movement.system())
-            .add_system(respawn::respawn_check.system())
-            .add_system(respawn::respawn_event_listener.system())
-            .add_system(camera_follow.system())
+            .add_system(update_app_state.system())
+            .add_system_set(
+                SystemSet::on_enter(AppState::Menu).with_system(ui::menu_setup.system()),
+            )
+            .add_system_set(
+                SystemSet::on_update(AppState::Menu).with_system(ui::button_system.system()),
+            )
+            .add_system_set(SystemSet::on_exit(AppState::Menu).with_system(cleanup.system()))
+            .add_system_set(SystemSet::on_enter(AppState::InGame).with_system(game_setup.system()))
+            .add_system_set(
+                SystemSet::on_update(AppState::InGame)
+                    .with_system(player::player_movement.system())
+                    .with_system(enemy::enemy_movement.system())
+                    .with_system(respawn::respawn_check.system())
+                    .with_system(respawn::respawn_event_listener.system())
+                    .with_system(camera_follow.system()),
+            )
+            .add_system_set(SystemSet::on_exit(AppState::InGame).with_system(cleanup.system()))
             .run();
     }
     Ok(())
