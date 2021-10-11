@@ -18,13 +18,13 @@ pub const TILE_SIZE: f32 = 64.0;
 pub const BACKGROUND_COLOR: Color = Color::rgb(0.18, 0.2, 0.25);
 
 #[derive(Debug, Clone, Eq, PartialEq, Hash)]
-enum MenuState {
+pub enum MenuState {
     Main,
     Level,
 }
 
 #[derive(Debug, Clone, Eq, PartialEq, Hash)]
-enum AppState {
+pub enum AppState {
     Menu(MenuState),
     InGame,
 }
@@ -77,8 +77,7 @@ fn game_setup(
     level_manager: Res<LevelManager>,
 ) {
     let map = level_manager.load().unwrap();
-    commands.insert_resource(ClearColor(Color::GRAY));
-    commands.spawn_bundle(OrthographicCameraBundle::new_2d());
+    let mut camera = OrthographicCameraBundle::new_2d();
 
     let half_size = (map.size / 2) as isize;
 
@@ -101,6 +100,10 @@ fn game_setup(
                     // Specify player's initial translation.
                     player_transform = transform;
                     player_coordinate = coordinate;
+                }
+                Tile::Goal => {
+                    // Make the initial camera's position equal to the goal tile.
+                    camera.transform = transform;
                 }
                 Tile::Enemy => {
                     // Spawn enemy.
@@ -129,6 +132,7 @@ fn game_setup(
         }
     }
 
+    // Spawn player.
     commands
         .spawn_bundle(SpriteBundle {
             material: materials.add(Player::COLOR.into()),
@@ -142,6 +146,8 @@ fn game_setup(
             player_coordinate,
         ))
         .insert(Player);
+
+    commands.spawn_bundle(camera);
 
     commands.insert_resource(map);
 }
@@ -204,6 +210,7 @@ fn main() -> Result<(), Box<dyn Error>> {
         .add_system_set(
             SystemSet::on_update(AppState::InGame)
                 .with_system(player::player_movement.system())
+                .with_system(player::check_completion.system())
                 .with_system(enemy::enemy_movement.system())
                 .with_system(respawn::respawn_check.system())
                 .with_system(respawn::respawn_event_listener.system())

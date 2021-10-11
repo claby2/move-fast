@@ -90,22 +90,27 @@ pub struct Map {
 impl Map {
     pub fn load<P: AsRef<Path>>(path: P) -> io::Result<Self> {
         let file = File::open(path)?;
-        let mut layout = Vec::new();
         let rows: Vec<io::Result<String>> = BufReader::new(file).lines().collect();
-        let size = rows.len();
+        // Add 2 to account for surrounding walls.
+        let size = rows.len() + 2;
+        let mut layout = vec![Tile::Block; size];
         for row in rows.iter() {
             let mut columns = 0;
             if let Ok(row) = row {
+                layout.push(Tile::Block);
                 for value in row.split(',') {
                     columns += 1;
                     layout.push(Tile::try_from(value.parse::<u8>().unwrap()).unwrap());
                 }
+                layout.push(Tile::Block);
                 assert_eq!(
-                    columns, size,
+                    columns,
+                    size - 2,
                     "Number of columns must be equal to number of rows"
                 );
             }
         }
+        layout.append(&mut vec![Tile::Block; size]);
         Ok(Self { size, layout })
     }
 }

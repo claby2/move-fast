@@ -2,6 +2,8 @@ use crate::level::LevelManager;
 use bevy::prelude::*;
 
 const TEXT_COLOR: Color = Color::rgb(0.92, 0.94, 0.96);
+const FONT_BOLD: &str = "fonts/FiraSans-Bold.ttf";
+const FONT_MEDIUM: &str = "fonts/FiraMono-Medium.ttf";
 
 #[derive(Debug)]
 pub struct PlayButton;
@@ -66,7 +68,7 @@ pub fn menu_setup(
             ..NodeBundle::default()
         })
         .with_children(|main| {
-            let font = asset_server.load("fonts/FiraSans-Bold.ttf");
+            let font = asset_server.load(FONT_BOLD);
             main.spawn_bundle(TextBundle {
                 style: Style {
                     position_type: PositionType::Absolute,
@@ -134,7 +136,8 @@ pub fn level_menu_setup(
         })
         .with_children(|main| {
             const LEVEL_HEIGHT: f32 = 50.0;
-            let font = asset_server.load("fonts/FiraSans-Bold.ttf");
+            let font_bold = asset_server.load(FONT_BOLD);
+            let font_medium = asset_server.load(FONT_MEDIUM);
             // Title.
             main.spawn_bundle(TextBundle {
                 style: Style {
@@ -144,7 +147,7 @@ pub fn level_menu_setup(
                 text: Text::with_section(
                     "Level Select",
                     TextStyle {
-                        font: font.clone(),
+                        font: font_bold,
                         font_size: 70.0,
                         color: TEXT_COLOR,
                     },
@@ -190,8 +193,8 @@ pub fn level_menu_setup(
                                             text: Text::with_section(
                                                 name,
                                                 TextStyle {
-                                                    font: font.clone(),
-                                                    font_size: 20.0,
+                                                    font: font_medium.clone(),
+                                                    font_size: 30.0,
                                                     color: TEXT_COLOR,
                                                 },
                                                 TextAlignment::default(),

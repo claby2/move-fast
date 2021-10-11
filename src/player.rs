@@ -1,4 +1,7 @@
-use crate::map::{Coordinates, Map};
+use crate::{
+    map::{Coordinates, Map, Tile},
+    AppState, MenuState,
+};
 use bevy::prelude::*;
 use std::cmp::Ordering;
 
@@ -43,6 +46,19 @@ pub fn player_movement(
         }
         if *player_coordinate != initial_coordinate {
             events.send(PlayerMovementEvent);
+        }
+    }
+}
+
+pub fn check_completion(
+    mut state: ResMut<State<AppState>>,
+    map: Res<Map>,
+    player_query: Query<&Coordinates, (With<Player>, Changed<Coordinates>)>,
+) {
+    if let Ok(coordinates) = player_query.single() {
+        // Return to main menu if the player is on the goal tile.
+        if matches!(map[coordinates.y()][coordinates.x()], Tile::Goal) {
+            state.set(AppState::Menu(MenuState::Main)).unwrap();
         }
     }
 }
