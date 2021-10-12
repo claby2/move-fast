@@ -43,9 +43,9 @@ pub fn player_movement(
                 }
                 _ => {}
             }
-        }
-        if *player_coordinate != initial_coordinate {
-            events.send(PlayerMovementEvent);
+            if *player_coordinate != initial_coordinate {
+                events.send(PlayerMovementEvent);
+            }
         }
     }
 }
