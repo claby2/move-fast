@@ -1,4 +1,4 @@
-use bevy::{math::Vec3, render::color::Color};
+use bevy::{ecs::component::Component, math::Vec3, render::color::Color};
 use num_enum::TryFromPrimitive;
 use std::{
     convert::TryFrom,
@@ -8,7 +8,7 @@ use std::{
     path::Path,
 };
 
-#[derive(Debug, Clone, Copy, PartialEq)]
+#[derive(Component, Debug, Clone, Copy, PartialEq)]
 pub struct Coordinates {
     x: usize,
     y: usize,
@@ -56,7 +56,7 @@ impl Coordinates {
     }
 }
 
-#[derive(Debug, Clone, Copy, TryFromPrimitive)]
+#[derive(Component, Debug, Clone, Copy, TryFromPrimitive)]
 #[repr(u8)]
 pub enum Tile {
     Empty,

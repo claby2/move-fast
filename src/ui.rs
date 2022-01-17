@@ -5,10 +5,13 @@ const TEXT_COLOR: Color = Color::rgb(0.92, 0.94, 0.96);
 const FONT_BOLD: &str = "fonts/FiraSans-Bold.ttf";
 const FONT_MEDIUM: &str = "fonts/FiraMono-Medium.ttf";
 
-#[derive(Debug)]
+const BUTTON_NORMAL_COLOR: Color = Color::rgb(0.37, 0.51, 0.67);
+const BUTTON_ACTIVE_COLOR: Color = Color::rgb(0.44, 0.55, 0.35);
+
+#[derive(Component, Debug)]
 pub struct PlayButton;
 
-#[derive(Debug)]
+#[derive(Component, Debug)]
 pub struct LevelButton(usize);
 
 impl LevelButton {
@@ -17,43 +20,21 @@ impl LevelButton {
     }
 }
 
-#[derive(Debug)]
-pub struct ButtonMaterials {
-    normal: Handle<ColorMaterial>,
-    active: Handle<ColorMaterial>,
-}
-
-impl FromWorld for ButtonMaterials {
-    fn from_world(world: &mut World) -> Self {
-        let mut materials = world.get_resource_mut::<Assets<ColorMaterial>>().unwrap();
-        Self {
-            normal: materials.add(Color::rgb(0.37, 0.51, 0.67).into()),
-            active: materials.add(Color::rgb(0.44, 0.55, 0.35).into()),
-        }
-    }
-}
-
-type InteractableButton<'a> = (&'a Interaction, &'a mut Handle<ColorMaterial>);
+type InteractableButton<'a> = (&'a Interaction, &'a mut UiColor);
 
 pub fn button_system(
-    button_materials: Res<ButtonMaterials>,
     mut interaction_query: Query<InteractableButton, (Changed<Interaction>, With<Button>)>,
 ) {
-    for (interaction, mut material) in interaction_query.iter_mut() {
+    for (interaction, mut color) in interaction_query.iter_mut() {
         if let Interaction::None = *interaction {
-            *material = button_materials.normal.clone();
+            *color = BUTTON_NORMAL_COLOR.into();
         } else {
-            *material = button_materials.active.clone();
+            *color = BUTTON_ACTIVE_COLOR.into();
         }
     }
 }
 
-pub fn menu_setup(
-    mut commands: Commands,
-    asset_server: Res<AssetServer>,
-    mut materials: ResMut<Assets<ColorMaterial>>,
-    button_materials: Res<ButtonMaterials>,
-) {
+pub fn menu_setup(mut commands: Commands, asset_server: Res<AssetServer>) {
     commands.insert_resource(ClearColor(crate::BACKGROUND_COLOR));
     commands.spawn_bundle(UiCameraBundle::default());
     commands
@@ -64,7 +45,7 @@ pub fn menu_setup(
                 align_items: AlignItems::FlexEnd,
                 ..Style::default()
             },
-            material: materials.add(Color::NONE.into()),
+            color: Color::NONE.into(),
             ..NodeBundle::default()
         })
         .with_children(|main| {
@@ -93,7 +74,7 @@ pub fn menu_setup(
                     align_items: AlignItems::Center,
                     ..Style::default()
                 },
-                material: button_materials.normal.clone(),
+                color: BUTTON_NORMAL_COLOR.into(),
                 ..ButtonBundle::default()
             })
             .insert(PlayButton)
@@ -118,8 +99,6 @@ pub fn level_menu_setup(
     mut commands: Commands,
     asset_server: Res<AssetServer>,
     level_manager: Res<LevelManager>,
-    mut materials: ResMut<Assets<ColorMaterial>>,
-    button_materials: Res<ButtonMaterials>,
 ) {
     commands.insert_resource(ClearColor(crate::BACKGROUND_COLOR));
     commands.spawn_bundle(UiCameraBundle::default());
@@ -131,7 +110,7 @@ pub fn level_menu_setup(
                 align_items: AlignItems::FlexEnd,
                 ..Style::default()
             },
-            material: materials.add(Color::NONE.into()),
+            color: Color::NONE.into(),
             ..NodeBundle::default()
         })
         .with_children(|main| {
@@ -163,7 +142,7 @@ pub fn level_menu_setup(
                     flex_direction: FlexDirection::ColumnReverse,
                     ..Style::default()
                 },
-                material: materials.add(Color::rgb(0.3, 0.34, 0.42).into()),
+                color: Color::rgb(0.3, 0.34, 0.42).into(),
                 ..NodeBundle::default()
             })
             .with_children(|parent| {
@@ -184,7 +163,7 @@ pub fn level_menu_setup(
                                             align_items: AlignItems::Center,
                                             ..Style::default()
                                         },
-                                        material: button_materials.normal.clone(),
+                                        color: BUTTON_NORMAL_COLOR.into(),
                                         ..ButtonBundle::default()
                                     })
                                     .insert(LevelButton(i))

@@ -4,7 +4,7 @@ use bevy::prelude::*;
 #[derive(Debug)]
 pub struct RespawnEvent;
 
-#[derive(Debug)]
+#[derive(Component, Debug)]
 pub struct RespawnPoint {
     translation: Vec3,
     coordinates: Coordinates,
@@ -24,11 +24,10 @@ pub fn respawn_check(
     player_query: Query<&Coordinates, With<Player>>,
     enemy_query: Query<&Coordinates, (With<Enemy>, Without<Player>)>,
 ) {
-    if let Ok(player_coordinate) = player_query.single() {
-        for enemy_coordinate in enemy_query.iter() {
-            if player_coordinate == enemy_coordinate {
-                events.send(RespawnEvent);
-            }
+    let player_coordinates = player_query.single();
+    for enemy_coordinates in enemy_query.iter() {
+        if player_coordinates == enemy_coordinates {
+            events.send(RespawnEvent);
         }
     }
 }
